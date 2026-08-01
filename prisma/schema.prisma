@@ -1,0 +1,141 @@
+// ------------------------------------------------------------
+// This file defines all of our database tables using Prisma ORM.
+// Prisma will translate these models into SQL tables inside our
+// Supabase PostgreSQL database.
+// ------------------------------------------------------------
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")   // Supabase Postgres connection
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ------------------------------------------------------------
+// USERS TABLE
+// Represents every member of the tool lending library.
+// Supabase Auth will handle login/signup, but we store
+// profile details here (name, email, etc.).
+// ------------------------------------------------------------
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique            // Required for login
+  name      String?                     // Optional profile field
+
+  // Relationships
+  listings  Listing[]                   // Tools this user owns
+  loans     Loan[]                      // Tools this user has rented
+  reviews   Review[]                    // Reviews written by this user
+  messages  ChatMessage[]               // Messages sent/received during active loans
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ------------------------------------------------------------
+// TOOLS TABLE
+// Represents the generic tool type (e.g., “Cordless Drill”).
+// A tool can have many listings from different owners.
+// ------------------------------------------------------------
+model Tool {
+  id        Int      @id @default(autoincrement())
+  name      String   @db.VarChar(255)   // Tool name (required)
+  category  String   @db.VarChar(255)   // Category (e.g., Power Tools)
+  imageUrl  String?                     // Optional image stored in Supabase Storage
+
+  listings  Listing[]                   // Listings for this tool
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ------------------------------------------------------------
+// LISTINGS TABLE
+// Represents a specific owner's instance of a tool.
+// Example: John’s drill for $10/day.
+// ------------------------------------------------------------
+model Listing {
+  id        Int      @id @default(autoincrement())
+
+  toolId    Int
+  ownerId   Int
+  price     Float                         // Rental price per day
+  available Boolean @default(true)        // Whether the listing is rentable
+
+  // Relationships
+  tool      Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  loans     Loan[]                         // Loans created for this listing
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ------------------------------------------------------------
+// LOANS TABLE
+// Represents an active or completed rental.
+// A loan ties together: listing + renter + dates.
+// ------------------------------------------------------------
+model Loan {
+  id         Int      @id @default(autoincrement())
+
+  listingId  Int
+  renterId   Int
+  startDate  DateTime                      // When rental begins
+  endDate    DateTime                      // When rental ends
+  status     String   @db.VarChar(50)      // "active", "returned", "late"
+
+  // Relationships
+  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  renter     User     @relation(fields: [renterId], references: [id], onDelete: Cascade)
+  messages   ChatMessage[]                 // Chat messages tied to this loan
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ------------------------------------------------------------
+// REVIEWS TABLE
+// Represents feedback left by renters about a listing.
+// ------------------------------------------------------------
+model Review {
+  id        Int      @id @default(autoincrement())
+
+  listingId Int
+  userId    Int
+  rating    Int                               // 1–5 stars
+  comment   String?                           // Optional text review
+
+  // Relationships
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ------------------------------------------------------------
+// CHAT MESSAGES TABLE
+// Represents messages exchanged between owner and renter.
+// IMPORTANT: Messages only exist for ACTIVE LOANS.
+// ------------------------------------------------------------
+model ChatMessage {
+  id         Int      @id @default(autoincrement())
+
+  loanId     Int
+  senderId   Int
+  receiverId Int
+  message    String                           // The actual text message
+
+  // Relationships
+  loan       Loan @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  sender     User @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
