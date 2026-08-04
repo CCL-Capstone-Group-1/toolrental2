@@ -11,7 +11,7 @@ import {
   createTool,
   updateTool,
   deleteTool
-} from '../controllers/tools.controller.js';
+} from '../controllers/tools.controllers.js';
 
 const router = Router();
 
