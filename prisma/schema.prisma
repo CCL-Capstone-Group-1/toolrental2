@@ -25,10 +25,11 @@ model User {
   name      String?                     // Optional profile field
 
   // Relationships
-  listings  Listing[]                   // Tools this user owns
-  loans     Loan[]                      // Tools this user has rented
-  reviews   Review[]                    // Reviews written by this user
-  messages  ChatMessage[]               // Messages sent/received during active loans
+  listings          Listing[]                     // Tools this user owns
+  loans             Loan[]                        // Tools this user has rented
+  reviews           Review[]                      // Reviews written by this user
+  sentMessages      ChatMessage[] @relation("Sender")     // Messages this user sent
+  receivedMessages  ChatMessage[] @relation("Receiver")   // Messages this user received
 
   // Timestamps
   createdAt DateTime @default(now())
@@ -37,7 +38,7 @@ model User {
 
 // ------------------------------------------------------------
 // TOOLS TABLE
-// Represents the generic tool type (e.g., “Cordless Drill”).
+// Represents the generic tool type (e.g., "Cordless Drill").
 // A tool can have many listings from different owners.
 // ------------------------------------------------------------
 model Tool {
@@ -55,7 +56,7 @@ model Tool {
 // ------------------------------------------------------------
 // LISTINGS TABLE
 // Represents a specific owner's instance of a tool.
-// Example: John’s drill for $10/day.
+// Example: John's drill for $10/day.
 // ------------------------------------------------------------
 model Listing {
   id        Int      @id @default(autoincrement())
@@ -69,6 +70,7 @@ model Listing {
   tool      Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
   owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   loans     Loan[]                         // Loans created for this listing
+  reviews   Review[]                       // Reviews written for this listing
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -77,7 +79,7 @@ model Listing {
 // ------------------------------------------------------------
 // LOANS TABLE
 // Represents an active or completed rental.
-// A loan ties together: listing + renter + dates.
+// A loan ties together: listing + renter + dates + payment.
 // ------------------------------------------------------------
 model Loan {
   id         Int      @id @default(autoincrement())
@@ -87,6 +89,11 @@ model Loan {
   startDate  DateTime                      // When rental begins
   endDate    DateTime                      // When rental ends
   status     String   @db.VarChar(50)      // "active", "returned", "late"
+
+  // Payment (simulated / Stripe test mode)
+  totalPrice             Decimal  @default(0)
+  paymentStatus           String   @default("pending") // pending | authorized | captured | failed | canceled
+  stripePaymentIntentId   String?
 
   // Relationships
   listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
@@ -138,4 +145,3 @@ model ChatMessage {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
-
