@@ -10,6 +10,7 @@ import listingsRoutes from './routes/listings.routes.js';
 import loansRoutes from './routes/loans.routes.js';
 import chatRoutes from './routes/chat.routes.js';
 import reviewsRoutes from './routes/reviews.routes.js';
+import paymentsRoutes from './routes/payments.routes.js';
 
 const app = express();
 
@@ -21,6 +22,8 @@ app.use('/api/listings', listingsRoutes);
 app.use('/api/loans', loansRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/reviews', reviewsRoutes);
+app.use('/api/payments', paymentsRoutes);//For Stripe Payments
+
 //Cetralized error handler
 app.use(errorHandler);
 

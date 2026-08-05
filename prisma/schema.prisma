@@ -145,3 +145,20 @@ model ChatMessage {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
+
+
+// ------------------------------------------------------------
+// PAYMENT   TABLE
+// Represents tracking payments between owner and renter.
+// IMPORTANT: Tracking for tax purposes.
+// ------------------------------------------------------------
+
+model Payment {
+  id        Int      @id @default(autoincrement())
+  loanId    Int
+  amount    Int
+  status    String
+  createdAt DateTime @default(now())
+
+  loan      Loan     @relation(fields: [loanId], references: [id])
+}
