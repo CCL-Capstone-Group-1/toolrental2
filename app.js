@@ -26,5 +26,6 @@ app.use('/api/payments', paymentsRoutes);//For Stripe Payments
 
 //Cetralized error handler
 app.use(errorHandler);
+app.use("/api/payments", paymentsRoutes);
 
 export default app;
