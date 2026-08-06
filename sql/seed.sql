@@ -2,13 +2,85 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-// ------------------------------------------------------------
-// 15 seed users across Power Tools, Hand Tools, and Yard Tools,
-// each with 2 listings appropriate for Central Ohio (30 total).
-// First names only (fun cohort-flavored placeholders) — no
-// fabricated age or personal details attached to real people.
-// Image URLs are left blank (null) — add them later.
-// ------------------------------------------------------------
+// Each tool name maps to an ARRAY of images — one per listing occurrence.
+// Tools listed by only one person just have a single-item array.
+// Tools listed by two people get two different photos so listings don't
+// look identical. Confirmed real Pexels photos where found; placeholders
+// (with distinguishing labels) where no clean product photo exists.
+const toolImageSets = {
+  "Cordless Drill/Driver Combo": [
+    "https://images.pexels.com/photos/1249610/pexels-photo-1249610.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop",
+    "https://images.pexels.com/photos/6790808/pexels-photo-6790808.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop",
+  ],
+  "Circular Saw": [
+    "https://images.pexels.com/photos/8820180/pexels-photo-8820180.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop",
+  ],
+  "Table Saw": [
+    "https://images.pexels.com/photos/313776/pexels-photo-313776.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop",
+    "https://images.pexels.com/photos/10316634/pexels-photo-10316634.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop",
+  ],
+  "Router": [
+    "https://placehold.co/800x600?text=Router+%231",
+    "https://placehold.co/800x600?text=Router+%232",
+  ],
+  "Air Compressor": [
+    "https://placehold.co/800x600?text=Air+Compressor+%231",
+    "https://placehold.co/800x600?text=Air+Compressor+%232",
+  ],
+  "Miter Saw": [
+    "https://images.pexels.com/photos/8447855/pexels-photo-8447855.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop",
+  ],
+  "Socket Set": [
+    "https://images.pexels.com/photos/4792482/pexels-photo-4792482.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop",
+    "https://images.pexels.com/photos/5210901/pexels-photo-5210901.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop",
+  ],
+  "Claw Hammer": [
+    "https://images.pexels.com/photos/5974343/pexels-photo-5974343.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop",
+    "https://images.pexels.com/photos/5974413/pexels-photo-5974413.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop",
+  ],
+  "Pipe Wrench": [
+    "https://placehold.co/800x600?text=Pipe+Wrench+%231",
+    "https://placehold.co/800x600?text=Pipe+Wrench+%232",
+  ],
+  "Adjustable Wrench Set": [
+    "https://placehold.co/800x600?text=Adjustable+Wrench+Set",
+  ],
+  "4ft Level": [
+    "https://placehold.co/800x600?text=4ft+Level",
+  ],
+  "Pry Bar": [
+    "https://placehold.co/800x600?text=Pry+Bar",
+  ],
+  "Tape Measure": [
+    "https://images.pexels.com/photos/30413398/pexels-photo-30413398.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop",
+  ],
+  "Push Lawn Mower": [
+    "https://images.pexels.com/photos/4162016/pexels-photo-4162016.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop",
+    "https://images.pexels.com/photos/11364122/pexels-photo-11364122.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop",
+  ],
+  "Leaf Blower": [
+    "https://images.pexels.com/photos/1623214/pexels-photo-1623214.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop",
+  ],
+  "String Trimmer": [
+    "https://placehold.co/800x600?text=String+Trimmer",
+  ],
+  "Pressure Washer": [
+    "https://placehold.co/800x600?text=Pressure+Washer+%231",
+    "https://placehold.co/800x600?text=Pressure+Washer+%232",
+  ],
+  "Chainsaw": [
+    "https://images.pexels.com/photos/8820192/pexels-photo-8820192.jpeg?auto=compress&cs=tinysrgb&w=800&h=600&fit=crop",
+  ],
+  "Aerator": [
+    "https://placehold.co/800x600?text=Aerator",
+  ],
+  "Snow Blower": [
+    "https://placehold.co/800x600?text=Snow+Blower",
+  ],
+  "Tiller/Cultivator": [
+    "https://placehold.co/800x600?text=Tiller+Cultivator",
+  ],
+};
 
 const people = [
   // ---------------- POWER TOOLS ----------------
@@ -160,22 +232,35 @@ async function main() {
   // tool type (e.g. "Circular Saw") is reused across multiple owners
   // instead of creating duplicate Tool rows.
   const toolCache = {};
+  // Tracks how many times each tool name has been listed so far, so the
+  // 2nd occurrence gets a different image than the 1st.
+  const toolOccurrence = {};
 
   async function getOrCreateTool(name, category) {
     if (toolCache[name]) return toolCache[name];
 
     let tool = await prisma.tool.findFirst({ where: { name } });
     if (!tool) {
+      const images = toolImageSets[name] || [];
       tool = await prisma.tool.create({
         data: {
           name,
           category,
-          imageUrl: null, // add later
+          imageUrl: images[0] || null, // Tool record keeps a default/reference image
         },
       });
     }
     toolCache[name] = tool;
     return tool;
+  }
+
+  function nextImageFor(name) {
+    const images = toolImageSets[name] || [];
+    if (images.length === 0) return null;
+    const index = toolOccurrence[name] || 0;
+    toolOccurrence[name] = index + 1;
+    // If there are more listings than images available, loop back around
+    return images[index % images.length];
   }
 
   for (const person of people) {
@@ -188,12 +273,14 @@ async function main() {
 
     for (const item of person.tools) {
       const tool = await getOrCreateTool(item.name, person.category);
+      const listingImage = nextImageFor(item.name);
 
       await prisma.listing.create({
         data: {
           toolId: tool.id,
           ownerId: user.id,
           price: item.price,
+          imageUrl: listingImage,
           available: true,
         },
       });
