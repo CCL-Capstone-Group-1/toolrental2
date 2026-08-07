@@ -6,7 +6,7 @@
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")   // Supabase Postgres connection
+  url      = env("DATABASE_URL") // Supabase Postgres connection
 }
 
 generator client {
@@ -20,16 +20,16 @@ generator client {
 // profile details here (name, email, etc.).
 // ------------------------------------------------------------
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique            // Required for login
-  name      String?                     // Optional profile field
+  id    Int     @id @default(autoincrement())
+  email String  @unique // Required for login
+  name  String? // Optional profile field
 
   // Relationships
-  listings          Listing[]                     // Tools this user owns
-  loans             Loan[]                        // Tools this user has rented
-  reviews           Review[]                      // Reviews written by this user
-  sentMessages      ChatMessage[] @relation("Sender")     // Messages this user sent
-  receivedMessages  ChatMessage[] @relation("Receiver")   // Messages this user received
+  listings         Listing[] // Tools this user owns
+  loans            Loan[] // Tools this user has rented
+  reviews          Review[] // Reviews written by this user
+  sentMessages     ChatMessage[] @relation("Sender") // Messages this user sent
+  receivedMessages ChatMessage[] @relation("Receiver") // Messages this user received
 
   // Timestamps
   createdAt DateTime @default(now())
@@ -42,12 +42,12 @@ model User {
 // A tool can have many listings from different owners.
 // ------------------------------------------------------------
 model Tool {
-  id        Int      @id @default(autoincrement())
-  name      String   @db.VarChar(255)   // Tool name (required)
-  category  String   @db.VarChar(255)   // Category (e.g., Power Tools)
-  imageUrl  String?                     // Optional image stored in Supabase Storage
+  id       Int     @id @default(autoincrement())
+  name     String  @db.VarChar(255) // Tool name (required)
+  category String  @db.VarChar(255) // Category (e.g., Power Tools)
+  imageUrl String? // Optional image stored in Supabase Storage
 
-  listings  Listing[]                   // Listings for this tool
+  listings Listing[] // Listings for this tool
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -59,18 +59,18 @@ model Tool {
 // Example: John's drill for $10/day.
 // ------------------------------------------------------------
 model Listing {
-  id        Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   toolId    Int
   ownerId   Int
-  price     Float                         // Rental price per day
-  available Boolean @default(true)        // Whether the listing is rentable
+  price     Float // Rental price per day
+  available Boolean @default(true) // Whether the listing is rentable
 
   // Relationships
-  tool      Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
-  owner     User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  loans     Loan[]                         // Loans created for this listing
-  reviews   Review[]                       // Reviews written for this listing
+  tool    Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  owner   User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  loans   Loan[] // Loans created for this listing
+  reviews Review[] // Reviews written for this listing
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -82,26 +82,26 @@ model Listing {
 // A loan ties together: listing + renter + dates + payment.
 // ------------------------------------------------------------
 model Loan {
-  id         Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  listingId  Int
-  renterId   Int
-  startDate  DateTime                      // When rental begins
-  endDate    DateTime                      // When rental ends
-  status     String   @db.VarChar(50)      // "active", "returned", "late"
+  listingId Int
+  renterId  Int
+  startDate DateTime // When rental begins
+  endDate   DateTime // When rental ends
+  status    String   @db.VarChar(50) // "active", "returned", "late"
 
   // Payment (simulated / Stripe test mode)
-  totalPrice             Decimal  @default(0)
-  paymentStatus           String   @default("pending") // pending | authorized | captured | failed | canceled
-  stripePaymentIntentId   String?
+  totalPrice            Decimal @default(0)
+  paymentStatus         String  @default("pending") // pending | authorized | captured | failed | canceled
+  stripePaymentIntentId String?
 
   // Relationships
-  listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  renter     User     @relation(fields: [renterId], references: [id], onDelete: Cascade)
-  messages   ChatMessage[]                 // Chat messages tied to this loan
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  listing   Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  renter    User          @relation(fields: [renterId], references: [id], onDelete: Cascade)
+  messages  ChatMessage[] // Chat messages tied to this loan
+  payments  Payment[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
 }
 
 // ------------------------------------------------------------
@@ -109,16 +109,16 @@ model Loan {
 // Represents feedback left by renters about a listing.
 // ------------------------------------------------------------
 model Review {
-  id        Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   listingId Int
   userId    Int
-  rating    Int                               // 1–5 stars
-  comment   String?                           // Optional text review
+  rating    Int // 1–5 stars
+  comment   String? // Optional text review
 
   // Relationships
-  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -130,22 +130,21 @@ model Review {
 // IMPORTANT: Messages only exist for ACTIVE LOANS.
 // ------------------------------------------------------------
 model ChatMessage {
-  id         Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
   loanId     Int
   senderId   Int
   receiverId Int
-  message    String                           // The actual text message
+  message    String // The actual text message
 
   // Relationships
-  loan       Loan @relation(fields: [loanId], references: [id], onDelete: Cascade)
-  sender     User @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver   User @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  loan     Loan @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  sender   User @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
-
 
 // ------------------------------------------------------------
 // PAYMENT   TABLE
@@ -160,5 +159,5 @@ model Payment {
   status    String
   createdAt DateTime @default(now())
 
-  loan      Loan     @relation(fields: [loanId], references: [id])
+  loan Loan @relation(fields: [loanId], references: [id])
 }
