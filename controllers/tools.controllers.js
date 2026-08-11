@@ -3,7 +3,7 @@
 // CRUD operations for tool types (e.g., “Cordless Drill”).
 // ------------------------------------------------------------
 
-import prisma from '../prisma/client.js';
+import prisma from '../src/prisma.js';
 import { sendError } from '../utils/response.js';
 
 // GET /api/tools

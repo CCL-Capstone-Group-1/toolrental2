@@ -3,8 +3,8 @@
 // Handles Stripe checkout sessions and webhook events.
 // ------------------------------------------------------------
 
-import stripe from "../stripe.js";
-import prisma from "../prisma/client.js";
+import stripe from "../server/stripe.js";
+import prisma from "../src/prisma.js";
 
 // POST /api/payments/create-checkout-session
 export async function createCheckoutSession(req, res, next) {

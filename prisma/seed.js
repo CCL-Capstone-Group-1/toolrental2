@@ -1,7 +1,6 @@
 // prisma/seed.js
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import "dotenv/config";
+import prisma from "../src/prisma.js";
 
 // Each tool name maps to an ARRAY of images — one per listing occurrence.
 // Tools listed by only one person just have a single-item array.
@@ -294,11 +293,11 @@ async function main() {
 }
 
 main()
-  .catch((err) => {
-    console.error(err);
-    process.exit(1);
-  })
-  .finally(async () => {
+  .then(async () => {
     await prisma.$disconnect();
+  })
+  .catch(async (error) => {
+    console.error(error);
+    await prisma.$disconnect();
+    process.exit(1);
   });
-  

@@ -3,7 +3,7 @@
 // Handles rental loans between users.
 // ------------------------------------------------------------
 
-import prisma from '../prisma/client.js';
+import prisma from '../src/prisma.js';
 import { sendError } from '../utils/response.js';
 
 // GET /api/loans

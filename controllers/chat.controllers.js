@@ -3,7 +3,7 @@
 // Handles chat messages between owner and renter during a loan.
 // ------------------------------------------------------------
 
-import prisma from '../prisma/client.js';
+import prisma from '../src/prisma.js';
 import { sendError } from '../utils/response.js';
 
 // GET /api/chat/loan/:loanId

@@ -3,6 +3,8 @@
 // Sets up Express, JSON parsing, routes, and error handling.
 // ------------------------------------------------------------
 
+import cors from 'cors';
+import dotenv from 'dotenv';
 import express from 'express';
 import { errorHandler } from './utils/errorHandler.js';
 import toolsRoutes from './routes/tools.routes.js';
@@ -11,21 +13,30 @@ import loansRoutes from './routes/loans.routes.js';
 import chatRoutes from './routes/chat.routes.js';
 import reviewsRoutes from './routes/reviews.routes.js';
 import paymentsRoutes from './routes/payments.routes.js';
+import usersRoutes from './routes/users.routes.js';
+
+dotenv.config();
 
 const app = express();
+const port = Number(process.env.PORT) || 3001;
 
-// Allows Express to read JSON bodies
+app.use(cors());
 app.use(express.json());
-//Mount routes
+
+// Mount routes
 app.use('/api/tools', toolsRoutes);
 app.use('/api/listings', listingsRoutes);
 app.use('/api/loans', loansRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/reviews', reviewsRoutes);
-app.use('/api/payments', paymentsRoutes);//For Stripe Payments
+app.use('/api/payments', paymentsRoutes);
+app.use('/api/users', usersRoutes);
 
-//Cetralized error handler
+// Centralized error handler
 app.use(errorHandler);
-app.use("/api/payments", paymentsRoutes);
+
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
+});
 
 export default app;

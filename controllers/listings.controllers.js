@@ -3,7 +3,7 @@
 // CRUD for tool listings owned by users.
 // ------------------------------------------------------------
 
-import prisma from '../prisma/client.js';
+import prisma from '../src/prisma.js';
 import { sendError } from '../utils/response.js';
 
 // GET /api/listings

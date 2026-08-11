@@ -5,6 +5,7 @@
 // - Storage (uploading images or ID verification files)
 // ------------------------------------------------------------
 
+import "dotenv/config";
 import { createClient } from '@supabase/supabase-js';
 
 // We read the Supabase URL and keys from environment variables.

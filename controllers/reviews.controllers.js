@@ -3,7 +3,7 @@
 // Handles reviews left by renters on listings.
 // ------------------------------------------------------------
 
-import prisma from '../prisma/client.js';
+import prisma from '../src/prisma.js';
 import { sendError } from '../utils/response.js';
 
 // GET /api/reviews

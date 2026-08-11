@@ -1,13 +1,23 @@
 // ------------------------------------------------------------
 // prisma.js
-// This file creates and exports a single PrismaClient instance.
-// We import this client in our controllers to run database queries.
+// Creates and exports a single PrismaClient instance using the
+// Prisma 7 PostgreSQL driver adapter.
 // ------------------------------------------------------------
 
-import { PrismaClient } from '@prisma/client';
+import "dotenv/config";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "@prisma/client";
 
-// Create one Prisma client for the whole app.
-// (Creating multiple clients can cause connection issues.)
-const prisma = new PrismaClient();
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL is required to start Prisma.");
+}
+
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
+  connectionTimeoutMillis: 5_000,
+  idleTimeoutMillis: 300_000
+});
+
+const prisma = new PrismaClient({ adapter });
 
 export default prisma;

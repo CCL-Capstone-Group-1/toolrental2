@@ -4,13 +4,12 @@
 // Supabase PostgreSQL database.
 // ------------------------------------------------------------
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL") // Supabase Postgres connection
-}
-
 generator client {
   provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
 }
 
 // ------------------------------------------------------------
@@ -65,6 +64,7 @@ model Listing {
   ownerId   Int
   price     Float // Rental price per day
   available Boolean @default(true) // Whether the listing is rentable
+  imageUrl  String? // Optional listing-specific photo
 
   // Relationships
   tool    Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)

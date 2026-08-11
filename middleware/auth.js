@@ -5,7 +5,7 @@
 // If not, we block access to protected routes.
 // ------------------------------------------------------------
 
-import supabase from '../db/supabase.js';
+import supabase from '../src/supabase.js';
 import { sendError } from '../utils/response.js';
 
 export async function requireAuth(req, res, next) {

@@ -4,7 +4,7 @@
 // Supabase manages authentication; Prisma stores profile details.
 // ------------------------------------------------------------
 
-import prisma from '../prisma/client.js';
+import prisma from '../src/prisma.js';
 import { sendError } from '../utils/response.js';
 
 // GET /api/users
