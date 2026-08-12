@@ -40,7 +40,7 @@ model User {
 // Represents the generic tool type (e.g., "Cordless Drill").
 // A tool can have many listings from different owners.
 // ------------------------------------------------------------
-model Tool {
+model Tools {
   id       Int     @id @default(autoincrement())
   name     String  @db.VarChar(255) // Tool name (required)
   category String  @db.VarChar(255) // Category (e.g., Power Tools)
@@ -67,7 +67,7 @@ model Listing {
   imageUrl  String? // Optional listing-specific photo
 
   // Relationships
-  tool    Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  tool    Tools     @relation(fields: [toolId], references: [id], onDelete: Cascade)
   owner   User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   loans   Loan[] // Loans created for this listing
   reviews Review[] // Reviews written for this listing
