@@ -35,6 +35,11 @@ app.use('/api/users', usersRoutes);
 // Centralized error handler
 app.use(errorHandler);
 
+app.get("/", (req, res) => {
+  res.json({ message: "Backend is running" });
+});
+
+
 app.listen(port, () => {
   console.log(`Server is running on http://localhost:${port}`);
 });
