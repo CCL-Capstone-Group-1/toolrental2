@@ -3,7 +3,7 @@
 // Handles Stripe checkout sessions and webhook events.
 // ------------------------------------------------------------
 
-import stripe from "../stripe.js";
+import stripe from "../server/stripe.js";
 import prisma from "../prisma/client.js";
 
 // POST /api/payments/create-checkout-session

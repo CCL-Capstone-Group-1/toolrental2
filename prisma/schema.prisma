@@ -99,6 +99,7 @@ model Loan {
   listing    Listing  @relation(fields: [listingId], references: [id], onDelete: Cascade)
   renter     User     @relation(fields: [renterId], references: [id], onDelete: Cascade)
   messages   ChatMessage[]                 // Chat messages tied to this loan
+  payments   Payment[]                     // Payment records tied to this loan
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

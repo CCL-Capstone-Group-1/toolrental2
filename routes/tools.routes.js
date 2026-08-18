@@ -10,7 +10,9 @@ import {
   getToolById,
   createTool,
   updateTool,
-  deleteTool
+  deleteTool,
+  getPopularTools,
+  getSeasonalTools
 } from '../controllers/tools.controllers.js';
 
 const router = Router();
@@ -18,6 +20,14 @@ const router = Router();
 // GET /api/tools
 // Lists all tools (supports optional ?category= and ?search= filters)
 router.get('/', getAllTools);
+
+// GET /api/tools/popular?limit=5
+// Ranks tools by total number of loans, most-rented first
+router.get('/popular', getPopularTools);
+
+// GET /api/tools/seasonal?month=8&limit=5
+// Ranks tools by loans started in a given month (defaults to current month)
+router.get('/seasonal', getSeasonalTools);
 
 // GET /api/tools/:id
 // Gets one tool by its ID
