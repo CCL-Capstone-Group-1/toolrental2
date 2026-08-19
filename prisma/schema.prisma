@@ -65,6 +65,7 @@ model Listing {
   ownerId   Int
   price     Float // Rental price per day
   available Boolean @default(true) // Whether the listing is rentable
+  imageUrl  String? // Optional photo for this specific listing (falls back to the Tool's imageUrl)
 
   // Relationships
   tool    Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
