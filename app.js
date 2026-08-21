@@ -28,7 +28,6 @@ app.use('/api/listings', listingsRoutes);
 app.use('/api/loans', loansRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/reviews', reviewsRoutes);
-app.use('/api/payments', paymentsRoutes);
 app.use('/api/users', usersRoutes);
 
 // Centralized error handler
