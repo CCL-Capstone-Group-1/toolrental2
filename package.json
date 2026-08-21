@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "prisma generate && node server/server.js",
+    "build": "prisma generate",
     "dev": "node --watch server/server.js",
     "start": "node server/server.js",
     "seed": "node prisma/seed.js",
