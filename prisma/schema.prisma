@@ -10,6 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 // ------------------------------------------------------------
@@ -67,7 +68,7 @@ model Listing {
   imageUrl  String? // Optional listing-specific photo
 
   // Relationships
-  tool    tools     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+  tool    tools    @relation(fields: [toolId], references: [id], onDelete: Cascade)
   owner   User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   loans   Loan[] // Loans created for this listing
   reviews Review[] // Reviews written for this listing
