@@ -12,7 +12,6 @@ import listingsRoutes from './routes/listings.routes.js';
 import loansRoutes from './routes/loans.routes.js';
 import chatRoutes from './routes/chat.routes.js';
 import reviewsRoutes from './routes/reviews.routes.js';
-import paymentsRoutes from './routes/payments.routes.js';
 import usersRoutes from './routes/users.routes.js';
 
 dotenv.config();
