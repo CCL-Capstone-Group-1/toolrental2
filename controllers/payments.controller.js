@@ -52,7 +52,7 @@ export async function stripeWebhook(req, res, next) {
       const session = event.data.object;
       const loanId = Number(session.metadata.loanId);
 
-      await prisma.loan.update({
+      await prisma.loans.update({
         where: { id: loanId },
         data: { status: "paid" },
       });

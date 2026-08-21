@@ -19,7 +19,7 @@ export async function register(req, res) {
       return sendError(res, 400, 'Email and password are required');
     }
 
-    const existing = await prisma.user.findUnique({ where: { email } });
+    const existing = await prisma.users.findUnique({ where: { email } });
     if (existing) {
       return sendError(res, 409, 'An account with this email already exists');
     }
@@ -34,7 +34,7 @@ export async function register(req, res) {
       return sendError(res, 400, authError.message);
     }
 
-    const user = await prisma.user.create({ data: { email, name } });
+    const user = await prisma.users.create({ data: { email, name } });
 
     const { data: sessionData, error: sessionError } = await supabase.auth.signInWithPassword({
       email,
@@ -68,7 +68,7 @@ export async function login(req, res) {
       return sendError(res, 401, 'Invalid email or password');
     }
 
-    const user = await prisma.user.findUnique({ where: { email } });
+    const user = await prisma.users.findUnique({ where: { email } });
     if (!user) {
       return sendError(res, 404, 'No profile found for this account');
     }
@@ -88,7 +88,7 @@ export async function login(req, res) {
 // from the JWT) to req.user. We look up the matching Prisma profile by email.
 export async function getProfile(req, res) {
   try {
-    const user = await prisma.user.findUnique({ where: { email: req.user.email } });
+    const user = await prisma.users.findUnique({ where: { email: req.user.email } });
     if (!user) return sendError(res, 404, 'User not found');
     return res.json(user);
   } catch (err) {
@@ -100,7 +100,7 @@ export async function getProfile(req, res) {
 // GET /api/users
 export async function getAllUsers(req, res) {
   try {
-    const users = await prisma.user.findMany();
+    const users = await prisma.users.findMany();
     return res.json(users);
   } catch (err) {
     console.error('Error fetching users:', err);
@@ -113,7 +113,7 @@ export async function getUserById(req, res) {
   try {
     const { id } = req.params;
 
-    const user = await prisma.user.findUnique({
+    const user = await prisma.users.findUnique({
       where: { id: Number(id) },
     });
 
@@ -131,7 +131,7 @@ export async function updateUser(req, res) {
   try {
     const { id } = req.params;
 
-    const updated = await prisma.user.update({
+    const updated = await prisma.users.update({
       where: { id: Number(id) },
       data: req.body,
     });

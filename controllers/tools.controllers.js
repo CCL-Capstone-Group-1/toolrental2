@@ -9,7 +9,7 @@ import { sendError } from '../utils/response.js';
 // GET /api/tools
 export async function getAllTools(req, res) {
   try {
-    const tools = await prisma.tool.findMany();
+    const tools = await prisma.tools.findMany();
     return res.json(tools);
   } catch (err) {
     console.error('Error fetching tools:', err);
@@ -22,7 +22,7 @@ export async function getToolById(req, res) {
   try {
     const { id } = req.params;
 
-    const tool = await prisma.tool.findUnique({
+    const tool = await prisma.tools.findUnique({
       where: { id: Number(id) },
     });
 
@@ -38,7 +38,7 @@ export async function getToolById(req, res) {
 // POST /api/tools
 export async function createTool(req, res) {
   try {
-    const newTool = await prisma.tool.create({ data: req.body });
+    const newTool = await prisma.tools.create({ data: req.body });
     return res.status(201).json(newTool);
   } catch (err) {
     console.error('Error creating tool:', err);
@@ -51,7 +51,7 @@ export async function updateTool(req, res) {
   try {
     const { id } = req.params;
 
-    const updated = await prisma.tool.update({
+    const updated = await prisma.tools.update({
       where: { id: Number(id) },
       data: req.body,
     });
@@ -68,7 +68,7 @@ export async function deleteTool(req, res) {
   try {
     const { id } = req.params;
 
-    await prisma.tool.delete({
+    await prisma.tools.delete({
       where: { id: Number(id) },
     });
 
@@ -79,24 +79,25 @@ export async function deleteTool(req, res) {
   }
 }
 
-// Counts loans per tool from a set of listingId -> count pairs, by
+// Counts loans per tool from a set of listing_id -> count pairs, by
 // mapping each listing back to its tool. Shared by the popular/seasonal
 // endpoints below.
 async function countLoansByTool(listingIdCounts) {
   const listingIds = [...listingIdCounts.keys()];
   if (listingIds.length === 0) return new Map();
 
-  const listings = await prisma.listing.findMany({
+  const listings = await prisma.listings.findMany({
     where: { id: { in: listingIds } },
-    include: { tool: true },
+    include: { tools: true },
   });
 
   const countsByTool = new Map();
   for (const listing of listings) {
+    if (!listing.tools) continue;
     const count = listingIdCounts.get(listing.id) || 0;
-    const entry = countsByTool.get(listing.tool.id) || { tool: listing.tool, rentalCount: 0 };
+    const entry = countsByTool.get(listing.tools.id) || { tool: listing.tools, rentalCount: 0 };
     entry.rentalCount += count;
-    countsByTool.set(listing.tool.id, entry);
+    countsByTool.set(listing.tools.id, entry);
   }
 
   return countsByTool;
@@ -115,12 +116,12 @@ export async function getPopularTools(req, res) {
   try {
     const limit = Number(req.query.limit) || 5;
 
-    const grouped = await prisma.loan.groupBy({
-      by: ['listingId'],
+    const grouped = await prisma.loans.groupBy({
+      by: ['listing_id'],
       _count: { _all: true },
     });
 
-    const listingIdCounts = new Map(grouped.map((g) => [g.listingId, g._count._all]));
+    const listingIdCounts = new Map(grouped.map((g) => [g.listing_id, g._count._all]));
     const countsByTool = await countLoansByTool(listingIdCounts);
 
     return res.json(topN(countsByTool, limit));
@@ -144,14 +145,14 @@ export async function getSeasonalTools(req, res) {
 
     // Prisma's groupBy can't extract a date part, so loans are fetched
     // and bucketed by month in application code.
-    const loans = await prisma.loan.findMany({
-      select: { listingId: true, startDate: true },
+    const loans = await prisma.loans.findMany({
+      select: { listing_id: true, start_date: true },
     });
 
     const listingIdCounts = new Map();
     for (const loan of loans) {
-      if (loan.startDate.getMonth() + 1 !== month) continue;
-      listingIdCounts.set(loan.listingId, (listingIdCounts.get(loan.listingId) || 0) + 1);
+      if (loan.start_date.getMonth() + 1 !== month) continue;
+      listingIdCounts.set(loan.listing_id, (listingIdCounts.get(loan.listing_id) || 0) + 1);
     }
 
     const countsByTool = await countLoansByTool(listingIdCounts);
