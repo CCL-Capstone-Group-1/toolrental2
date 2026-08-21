@@ -2,17 +2,16 @@
 // chat.controller.js
 // Handles chat messages between owner and renter during a loan.
 // ------------------------------------------------------------
-
 import prisma from '../src/prisma.js';
 import { sendError } from '../utils/response.js';
 
-// GET /api/chat/loan/:loanId
-export async function getMessagesForLoan(req, res) {
+// GET /api/chat/listing/:listingId
+export async function getMessagesForListing(req, res) {
   try {
-    const { loanId } = req.params;
+    const { listingId } = req.params;
 
     const messages = await prisma.chatMessage.findMany({
-      where: { loanId: Number(loanId) },
+      where: { listingId: Number(listingId) },
       include: { sender: true, receiver: true },
       orderBy: { createdAt: 'asc' },
     });

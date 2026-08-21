@@ -72,6 +72,7 @@ model Listing {
   owner   User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   loans   Loan[] // Loans created for this listing
   reviews Review[] // Reviews written for this listing
+  chatMessages     ChatMessage[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -99,7 +100,6 @@ model Loan {
   // Relationships
   listing   Listing       @relation(fields: [listingId], references: [id], onDelete: Cascade)
   renter    User          @relation(fields: [renterId], references: [id], onDelete: Cascade)
-  messages  ChatMessage[] // Chat messages tied to this loan
   payments  Payment[]
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
@@ -131,20 +131,20 @@ model Review {
 // IMPORTANT: Messages only exist for ACTIVE LOANS.
 // ------------------------------------------------------------
 model ChatMessage {
-  id Int @id @default(autoincrement())
-
-  loanId     Int
-  senderId   Int
-  receiverId Int
-  message    String // The actual text message
+  id         Int      @id @default(autoincrement())
+  senderId   Int      @map("sender_id")
+  receiverId Int      @map("receiver_id")
+  listingId  Int      @map("listing_id")
+  content    String
+  isRead     Boolean  @default(false) @map("is_read")
+  createdAt  DateTime @default(now()) @map("created_at")
 
   // Relationships
-  loan     Loan @relation(fields: [loanId], references: [id], onDelete: Cascade)
-  sender   User @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
-  receiver User @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  listing  Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  sender   User    @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User    @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  @@map("messages")
 }
 
 // ------------------------------------------------------------
