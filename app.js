@@ -12,7 +12,6 @@ import listingsRoutes from './routes/listings.routes.js';
 import loansRoutes from './routes/loans.routes.js';
 import chatRoutes from './routes/chat.routes.js';
 import reviewsRoutes from './routes/reviews.routes.js';
-import paymentsRoutes from './routes/payments.routes.js';
 
 const app = express();
 
@@ -23,15 +22,7 @@ app.use(cors({
   credentials: true,
 }));
 
-// Allows Express to read JSON bodies. The `verify` callback stashes the raw
-// request bytes on req.rawBody, which the Stripe webhook handler needs for
-// signature verification (Stripe signs the exact raw payload, not the
-// re-serialized parsed object).
-app.use(express.json({
-  verify: (req, res, buf) => {
-    req.rawBody = buf;
-  },
-}));
+app.use(express.json());
 
 //Mount routes
 app.use('/api/users', usersRoutes);
@@ -40,7 +31,6 @@ app.use('/api/listings', listingsRoutes);
 app.use('/api/loans', loansRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/reviews', reviewsRoutes);
-app.use('/api/payments', paymentsRoutes);//For Stripe Payments
 
 //Cetralized error handler
 app.use(errorHandler);
