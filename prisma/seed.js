@@ -302,14 +302,12 @@ async function main() {
   async function getOrCreateTool(name, category) {
     if (toolCache[name]) return toolCache[name];
 
-    let tool = await prisma.tool.findFirst({ where: { name } });
+    let tool = await prisma.tools.findFirst({ where: { name } });
     if (!tool) {
-      const images = toolImageSets[name] || [];
-      tool = await prisma.tool.create({
+      tool = await prisma.tools.create({
         data: {
           name,
           category,
-          imageUrl: images[0] || null, // Tool record keeps a default/reference image
         },
       });
     }
@@ -327,7 +325,7 @@ async function main() {
   }
 
   for (const person of people) {
-    const user = await prisma.user.create({
+    const user = await prisma.users.create({
       data: {
         name: person.name,
         email: person.email,
@@ -339,13 +337,13 @@ async function main() {
       const tool = await getOrCreateTool(item.name, person.category);
       const listingImage = nextImageFor(item.name);
 
-      const listing = await prisma.listing.create({
+      const listing = await prisma.listings.create({
         data: {
-          toolId: tool.id,
-          ownerId: user.id,
+          title: item.name,
+          tool_id: tool.id,
+          owner_id: user.id,
           price: item.price,
-          imageUrl: listingImage,
-          available: true,
+          image_url: listingImage,
         },
       });
       allListings.push({ listing, toolName: item.name, ownerId: user.id });
@@ -374,15 +372,13 @@ async function main() {
 
       const renter = pickRandom(possibleRenters);
 
-      await prisma.loan.create({
+      await prisma.loans.create({
         data: {
-          listingId: listing.id,
-          renterId: renter.id,
-          startDate,
-          endDate,
+          listing_id: listing.id,
+          borrower_id: renter.id,
+          start_date: startDate,
+          end_date: endDate,
           status: "returned",
-          totalPrice: listing.price * durationDays,
-          paymentStatus: "captured",
         },
       });
       loanCount++;
