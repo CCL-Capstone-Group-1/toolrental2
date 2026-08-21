@@ -5,9 +5,17 @@
 // ------------------------------------------------------------
 
 import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import pg from 'pg';
 
-// Create one Prisma client for the whole app.
-// (Creating multiple clients can cause connection issues.)
-const prisma = new PrismaClient();
+// Supabase (and most hosted Postgres) requires SSL. The pg driver
+// does not always pick that up from the connection string alone.
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+});
+
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 export default prisma;
