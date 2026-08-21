@@ -9,8 +9,8 @@ import { sendError } from '../utils/response.js';
 // GET /api/loans
 export async function getAllLoans(req, res) {
   try {
-    const loans = await prisma.loan.findMany({
-      include: { listing: true, renter: true },
+    const loans = await prisma.loans.findMany({
+      include: { listings: true, users: true },
     });
     return res.json(loans);
   } catch (err) {
@@ -24,9 +24,9 @@ export async function getLoanById(req, res) {
   try {
     const { id } = req.params;
 
-    const loan = await prisma.loan.findUnique({
+    const loan = await prisma.loans.findUnique({
       where: { id: Number(id) },
-      include: { listing: true, renter: true, messages: true },
+      include: { listings: true, users: true },
     });
 
     if (!loan) return sendError(res, 404, 'Loan not found');
@@ -41,7 +41,7 @@ export async function getLoanById(req, res) {
 // POST /api/loans
 export async function createLoan(req, res) {
   try {
-    const newLoan = await prisma.loan.create({ data: req.body });
+    const newLoan = await prisma.loans.create({ data: req.body });
     return res.status(201).json(newLoan);
   } catch (err) {
     console.error('Error creating loan:', err);
@@ -54,7 +54,7 @@ export async function updateLoan(req, res) {
   try {
     const { id } = req.params;
 
-    const updated = await prisma.loan.update({
+    const updated = await prisma.loans.update({
       where: { id: Number(id) },
       data: req.body,
     });
@@ -71,7 +71,7 @@ export async function deleteLoan(req, res) {
   try {
     const { id } = req.params;
 
-    await prisma.loan.delete({
+    await prisma.loans.delete({
       where: { id: Number(id) },
     });
 

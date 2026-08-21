@@ -9,8 +9,8 @@ import { sendError } from '../utils/response.js';
 // GET /api/listings
 export async function getAllListings(req, res) {
   try {
-    const listings = await prisma.listing.findMany({
-      include: { tool: true, owner: true },
+    const listings = await prisma.listings.findMany({
+      include: { tools: true, users: true },
     });
     return res.json(listings);
   } catch (err) {
@@ -24,9 +24,9 @@ export async function getListingById(req, res) {
   try {
     const { id } = req.params;
 
-    const listing = await prisma.listing.findUnique({
+    const listing = await prisma.listings.findUnique({
       where: { id: Number(id) },
-      include: { tool: true, owner: true },
+      include: { tools: true, users: true },
     });
 
     if (!listing) return sendError(res, 404, 'Listing not found');
@@ -41,7 +41,7 @@ export async function getListingById(req, res) {
 // POST /api/listings
 export async function createListing(req, res) {
   try {
-    const newListing = await prisma.listing.create({ data: req.body });
+    const newListing = await prisma.listings.create({ data: req.body });
     return res.status(201).json(newListing);
   } catch (err) {
     console.error('Error creating listing:', err);
@@ -54,7 +54,7 @@ export async function updateListing(req, res) {
   try {
     const { id } = req.params;
 
-    const updated = await prisma.listing.update({
+    const updated = await prisma.listings.update({
       where: { id: Number(id) },
       data: req.body,
     });
@@ -71,7 +71,7 @@ export async function deleteListing(req, res) {
   try {
     const { id } = req.params;
 
-    await prisma.listing.delete({
+    await prisma.listings.delete({
       where: { id: Number(id) },
     });
 

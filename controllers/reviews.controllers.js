@@ -9,8 +9,8 @@ import { sendError } from '../utils/response.js';
 // GET /api/reviews
 export async function getAllReviews(req, res) {
   try {
-    const reviews = await prisma.review.findMany({
-      include: { listing: true, user: true },
+    const reviews = await prisma.reviews.findMany({
+      include: { listings: true, users: true },
     });
     return res.json(reviews);
   } catch (err) {
@@ -24,9 +24,9 @@ export async function getReviewById(req, res) {
   try {
     const { id } = req.params;
 
-    const review = await prisma.review.findUnique({
+    const review = await prisma.reviews.findUnique({
       where: { id: Number(id) },
-      include: { listing: true, user: true },
+      include: { listings: true, users: true },
     });
 
     if (!review) return sendError(res, 404, 'Review not found');
@@ -41,7 +41,7 @@ export async function getReviewById(req, res) {
 // POST /api/reviews
 export async function createReview(req, res) {
   try {
-    const newReview = await prisma.review.create({ data: req.body });
+    const newReview = await prisma.reviews.create({ data: req.body });
     return res.status(201).json(newReview);
   } catch (err) {
     console.error('Error creating review:', err);
@@ -54,7 +54,7 @@ export async function updateReview(req, res) {
   try {
     const { id } = req.params;
 
-    const updated = await prisma.review.update({
+    const updated = await prisma.reviews.update({
       where: { id: Number(id) },
       data: req.body,
     });
@@ -71,7 +71,7 @@ export async function deleteReview(req, res) {
   try {
     const { id } = req.params;
 
-    await prisma.review.delete({
+    await prisma.reviews.delete({
       where: { id: Number(id) },
     });
 
