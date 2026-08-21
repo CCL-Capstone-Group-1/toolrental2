@@ -12,6 +12,7 @@ import listingsRoutes from './routes/listings.routes.js';
 import loansRoutes from './routes/loans.routes.js';
 import chatRoutes from './routes/chat.routes.js';
 import reviewsRoutes from './routes/reviews.routes.js';
+import paymentsRoutes from './routes/payments.routes.js';
 import usersRoutes from './routes/users.routes.js';
 
 dotenv.config();
@@ -27,6 +28,7 @@ app.use('/api/tools', toolsRoutes);
 app.use('/api/listings', listingsRoutes);
 app.use('/api/loans', loansRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/payments', paymentsRoutes);
 app.use('/api/reviews', reviewsRoutes);
 app.use('/api/users', usersRoutes);
 

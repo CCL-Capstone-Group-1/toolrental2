@@ -155,10 +155,13 @@ model ChatMessage {
 
 model Payment {
   id        Int      @id @default(autoincrement())
-  loanId    Int
-  amount    Int
+  loanId    Int      @map("loan_id")
+  amount    Decimal
   status    String
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @map("created_at")
 
-  loan Loan @relation(fields: [loanId], references: [id])
+  // Relationship back to the Loan
+  loan      Loan     @relation(fields: [loanId], references: [id], onDelete: Cascade)
+
+  @@map("payments")
 }
