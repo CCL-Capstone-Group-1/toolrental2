@@ -1,85 +1,40 @@
 // ------------------------------------------------------------
 // users.controller.js
 // Handles user profile CRUD using Prisma.
-// Supabase manages authentication; Prisma stores profile details.
+// Supabase manages authentication (called directly from the frontend);
+// this backend only stores/serves the profile row that mirrors it.
 // ------------------------------------------------------------
 
 import prisma from '../prisma/client.js';
 import supabase from '../db/supabase.js';
 import { sendError } from '../utils/response.js';
 
-// POST /api/users/register
-// Creates the auth account in Supabase (which stores/hashes the password —
-// we never touch it ourselves) and mirrors the profile into our own Users
-// table, keyed by email. Returns a session token + the Prisma user row.
-export async function register(req, res) {
+// POST /api/users/profile   (protected by requireAuth)
+// Creates the Prisma profile row for a user who has ALREADY registered
+// with Supabase Auth directly from the frontend (supabase.auth.signUp()).
+// req.user is attached by requireAuth after verifying the Supabase JWT,
+// so we trust req.user.email rather than trusting the request body for
+// identity — the body only supplies extra profile fields.
+export async function createProfile(req, res) {
   try {
-    const { email, password, name } = req.body;
-    if (!email || !password) {
-      return sendError(res, 400, 'Email and password are required');
-    }
+    const email = req.user.email;
+    const { name, image_url } = req.body;
 
     const existing = await prisma.users.findUnique({ where: { email } });
     if (existing) {
-      return sendError(res, 409, 'An account with this email already exists');
+      // Already created (e.g. a retried request) — just return it instead
+      // of erroring, so this endpoint is safe to call more than once.
+      return res.status(200).json(existing);
     }
 
-    const { error: authError } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true, // skip email verification for this app
+    const user = await prisma.users.create({
+      data: { email, name: name || email, image_url: image_url || null },
     });
 
-    if (authError) {
-      return sendError(res, 400, authError.message);
-    }
-
-    const user = await prisma.users.create({ data: { email, name } });
-
-    const { data: sessionData, error: sessionError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (sessionError) {
-      return sendError(res, 500, 'Account created, but failed to sign in');
-    }
-
-    return res.status(201).json({
-      token: sessionData.session.access_token,
-      user,
-    });
+    return res.status(201).json(user);
   } catch (err) {
-    console.error('Error registering user:', err);
-    return sendError(res, 500, 'Failed to register user');
-  }
-}
-
-// POST /api/users/login
-export async function login(req, res) {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      return sendError(res, 400, 'Email and password are required');
-    }
-
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) {
-      return sendError(res, 401, 'Invalid email or password');
-    }
-
-    const user = await prisma.users.findUnique({ where: { email } });
-    if (!user) {
-      return sendError(res, 404, 'No profile found for this account');
-    }
-
-    return res.json({
-      token: data.session.access_token,
-      user,
-    });
-  } catch (err) {
-    console.error('Error logging in:', err);
-    return sendError(res, 500, 'Failed to log in');
+    console.error('Error creating profile:', err);
+    return sendError(res, 500, 'Failed to create profile');
   }
 }
 
