@@ -19,7 +19,8 @@ const app = express();
 // call this API from the browser.
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
   .split(',')
-  .map((origin) => origin.trim());
+  .map((origin) => origin.trim())
+  .concat('https://toolrental2.vercel.app');
 
 app.use(cors({
   origin: allowedOrigins,
