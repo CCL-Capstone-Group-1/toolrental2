@@ -38,6 +38,28 @@ export async function getListingById(req, res) {
   }
 }
 
+// GET /api/listings/:id/bookings
+// Returns the date ranges this listing is already booked for, so the
+// frontend can block/warn about those dates before a renter submits.
+export async function getListingBookings(req, res) {
+  try {
+    const { id } = req.params;
+
+    const bookings = await prisma.loans.findMany({
+      where: {
+        listing_id: Number(id),
+        status: { not: 'cancelled' },
+      },
+      select: { start_date: true, end_date: true },
+    });
+
+    return res.json(bookings);
+  } catch (err) {
+    console.error('Error fetching listing bookings:', err);
+    return sendError(res, 500, 'Failed to fetch listing bookings');
+  }
+}
+
 // POST /api/listings
 export async function createListing(req, res) {
   try {
