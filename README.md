@@ -38,7 +38,10 @@ backend/
 2. Navigate to `/backend`  
 3. Install dependencies  
 4. Add `.env` variables  
-5. Run the dev server  
+5. For an existing Supabase database, baseline Prisma once:
+	`npx prisma migrate resolve --applied 202608220000_baseline`
+6. Apply pending migrations with `npm run db:migrate`
+7. Run the dev server
 
 ---
 

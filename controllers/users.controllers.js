@@ -18,15 +18,32 @@ function signToken(user) {
   });
 }
 
+function publicUser(user) {
+  const { password_hash: _passwordHash, ...safeUser } = user;
+  return {
+    ...safeUser,
+    firstName: user.first_name,
+    lastName: user.last_name,
+    homeAddress: user.home_address,
+    aptNumber: user.apt_number,
+    eSignature: user.e_signature,
+    avatarUrl: user.avatar_url || user.image_url,
+  };
+}
+
 // POST /api/users/register
 export async function register(req, res) {
   try {
-    const { email, password, name, image_url } = req.body;
+    const {
+      firstName, lastName, name, email, password, homeAddress, aptNumber,
+      city, state, eSignature, avatarUrl, imageUrl,
+    } = req.body;
     if (!email || !password) {
       return sendError(res, 400, 'Email and password are required');
     }
 
-    const existing = await prisma.users.findUnique({ where: { email } });
+    const normalizedEmail = email.trim().toLowerCase();
+    const existing = await prisma.users.findUnique({ where: { email: normalizedEmail } });
     if (existing) {
       return sendError(res, 409, 'An account with this email already exists');
     }
@@ -34,13 +51,24 @@ export async function register(req, res) {
     const password_hash = await bcrypt.hash(password, 10);
 
     const user = await prisma.users.create({
-      data: { email, name: name || email, password_hash, image_url: image_url || null },
+      data: {
+        first_name: firstName || null,
+        last_name: lastName || null,
+        name: name || [firstName, lastName].filter(Boolean).join(' ') || email,
+        email: normalizedEmail,
+        password_hash,
+        home_address: homeAddress || null,
+        apt_number: aptNumber || null,
+        city: city || null,
+        state: state || null,
+        e_signature: eSignature || null,
+        avatar_url: avatarUrl || null,
+        image_url: imageUrl || null,
+      },
     });
 
     const token = signToken(user);
-    const { password_hash: _omit, ...safeUser } = user;
-
-    return res.status(201).json({ token, user: safeUser });
+    return res.status(201).json({ token, user: publicUser(user) });
   } catch (err) {
     console.error('Error registering user:', err);
     return sendError(res, 500, 'Failed to register user');
@@ -55,7 +83,7 @@ export async function login(req, res) {
       return sendError(res, 400, 'Email and password are required');
     }
 
-    const user = await prisma.users.findUnique({ where: { email } });
+    const user = await prisma.users.findUnique({ where: { email: email.trim().toLowerCase() } });
     if (!user || !user.password_hash) {
       return sendError(res, 401, 'Invalid email or password');
     }
@@ -66,9 +94,7 @@ export async function login(req, res) {
     }
 
     const token = signToken(user);
-    const { password_hash: _omit, ...safeUser } = user;
-
-    return res.json({ token, user: safeUser });
+    return res.json({ token, user: publicUser(user) });
   } catch (err) {
     console.error('Error logging in:', err);
     return sendError(res, 500, 'Failed to log in');
@@ -80,8 +106,7 @@ export async function getProfile(req, res) {
   try {
     const user = await prisma.users.findUnique({ where: { id: req.user.id } });
     if (!user) return sendError(res, 404, 'User not found');
-    const { password_hash, ...safeUser } = user;
-    return res.json(safeUser);
+    return res.json(publicUser(user));
   } catch (err) {
     console.error('Error fetching profile:', err);
     return sendError(res, 500, 'Failed to fetch profile');
@@ -92,8 +117,7 @@ export async function getProfile(req, res) {
 export async function getAllUsers(req, res) {
   try {
     const users = await prisma.users.findMany();
-    const safeUsers = users.map(({ password_hash, ...u }) => u);
-    return res.json(safeUsers);
+    return res.json(users.map(publicUser));
   } catch (err) {
     console.error('Error fetching users:', err);
     return sendError(res, 500, 'Failed to fetch users');
@@ -106,8 +130,7 @@ export async function getUserById(req, res) {
     const { id } = req.params;
     const user = await prisma.users.findUnique({ where: { id: Number(id) } });
     if (!user) return sendError(res, 404, 'User not found');
-    const { password_hash, ...safeUser } = user;
-    return res.json(safeUser);
+    return res.json(publicUser(user));
   } catch (err) {
     console.error('Error fetching user:', err);
     return sendError(res, 500, 'Failed to fetch user');
@@ -118,15 +141,35 @@ export async function getUserById(req, res) {
 export async function updateUser(req, res) {
   try {
     const { id } = req.params;
-    const { password_hash, password, ...safeData } = req.body;
+    if (Number(id) !== req.user.id) {
+      return sendError(res, 403, 'You can only update your own profile');
+    }
+
+    const {
+      firstName, lastName, name, email, password, homeAddress, aptNumber,
+      city, state, eSignature, avatarUrl, imageUrl,
+    } = req.body;
+    const safeData = {
+      ...(firstName !== undefined && { first_name: firstName }),
+      ...(lastName !== undefined && { last_name: lastName }),
+      ...(name !== undefined && { name }),
+      ...(email !== undefined && { email: email.trim().toLowerCase() }),
+      ...(homeAddress !== undefined && { home_address: homeAddress }),
+      ...(aptNumber !== undefined && { apt_number: aptNumber }),
+      ...(city !== undefined && { city }),
+      ...(state !== undefined && { state }),
+      ...(eSignature !== undefined && { e_signature: eSignature }),
+      ...(avatarUrl !== undefined && { avatar_url: avatarUrl }),
+      ...(imageUrl !== undefined && { image_url: imageUrl }),
+      ...(password && { password_hash: await bcrypt.hash(password, 10) }),
+    };
 
     const updated = await prisma.users.update({
       where: { id: Number(id) },
       data: safeData,
     });
 
-    const { password_hash: _omit, ...safeUser } = updated;
-    return res.json(safeUser);
+    return res.json(publicUser(updated));
   } catch (err) {
     console.error('Error updating user:', err);
     return sendError(res, 500, 'Failed to update user');

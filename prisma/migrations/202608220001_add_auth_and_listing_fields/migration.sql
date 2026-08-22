@@ -1,0 +1,27 @@
+ALTER TABLE "users"
+  ADD COLUMN IF NOT EXISTS "password_hash" TEXT,
+  ADD COLUMN IF NOT EXISTS "first_name" TEXT,
+  ADD COLUMN IF NOT EXISTS "last_name" TEXT,
+  ADD COLUMN IF NOT EXISTS "home_address" TEXT,
+  ADD COLUMN IF NOT EXISTS "apt_number" TEXT,
+  ADD COLUMN IF NOT EXISTS "city" TEXT,
+  ADD COLUMN IF NOT EXISTS "state" TEXT,
+  ADD COLUMN IF NOT EXISTS "e_signature" TEXT,
+  ADD COLUMN IF NOT EXISTS "avatar_url" TEXT;
+
+ALTER TABLE "listings"
+  ADD COLUMN IF NOT EXISTS "title" TEXT,
+  ADD COLUMN IF NOT EXISTS "description" TEXT,
+  ADD COLUMN IF NOT EXISTS "image_url" TEXT,
+  ADD COLUMN IF NOT EXISTS "tool_type" TEXT,
+  ADD COLUMN IF NOT EXISTS "category" TEXT,
+  ADD COLUMN IF NOT EXISTS "availability_start" TIMESTAMP(6),
+  ADD COLUMN IF NOT EXISTS "availability_end" TIMESTAMP(6),
+  ADD COLUMN IF NOT EXISTS "is_active" BOOLEAN NOT NULL DEFAULT true;
+
+UPDATE "listings"
+SET "title" = COALESCE(NULLIF("title", ''), 'Tool listing')
+WHERE "title" IS NULL OR "title" = '';
+
+ALTER TABLE "listings"
+  ALTER COLUMN "title" SET NOT NULL;

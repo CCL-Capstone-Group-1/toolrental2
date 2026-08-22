@@ -13,8 +13,8 @@ export async function requireAuth(req, res, next) {
       return sendError(res, 401, 'Missing Authorization header');
     }
 
-    const token = authHeader.split(' ')[1];
-    if (!token) {
+    const [scheme, token] = authHeader.split(' ');
+    if (scheme !== 'Bearer' || !token) {
       return sendError(res, 401, 'Invalid Authorization header format');
     }
 

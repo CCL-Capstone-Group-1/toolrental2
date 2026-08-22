@@ -1,0 +1,3 @@
+-- Baseline for the existing Supabase public schema.
+-- Mark this migration as applied once on the existing database:
+-- npx prisma migrate resolve --applied 202608220000_baseline

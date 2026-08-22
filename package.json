@@ -4,6 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "prisma generate",
+    "db:migrate": "prisma migrate deploy",
+    "db:migrate:dev": "prisma migrate dev",
     "dev": "node --watch server/server.js",
     "start": "node server/server.js",
     "seed": "node prisma/seed.js",
