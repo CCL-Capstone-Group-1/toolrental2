@@ -1,51 +1,87 @@
 // ------------------------------------------------------------
 // users.controller.js
-// Handles user profile CRUD using Prisma.
-// Supabase manages authentication (called directly from the frontend);
-// this backend only stores/serves the profile row that mirrors it.
+// Handles auth and profile CRUD entirely with Prisma + bcrypt + JWT.
+// No Supabase Auth involved — this backend is the full source of truth
+// for accounts, so it doesn't depend on any Supabase project settings.
 // ------------------------------------------------------------
 
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import prisma from '../prisma/client.js';
-import supabase from '../db/supabase.js';
 import { sendError } from '../utils/response.js';
 
-// POST /api/users/profile   (protected by requireAuth)
-// Creates the Prisma profile row for a user who has ALREADY registered
-// with Supabase Auth directly from the frontend (supabase.auth.signUp()).
-// req.user is attached by requireAuth after verifying the Supabase JWT,
-// so we trust req.user.email rather than trusting the request body for
-// identity — the body only supplies extra profile fields.
-export async function createProfile(req, res) {
+const TOKEN_EXPIRY = '7d';
+
+function signToken(user) {
+  return jwt.sign({ id: user.id, email: user.email }, process.env.JWT_SECRET, {
+    expiresIn: TOKEN_EXPIRY,
+  });
+}
+
+// POST /api/users/register
+export async function register(req, res) {
   try {
-    const email = req.user.email;
-    const { name, image_url } = req.body;
+    const { email, password, name, image_url } = req.body;
+    if (!email || !password) {
+      return sendError(res, 400, 'Email and password are required');
+    }
 
     const existing = await prisma.users.findUnique({ where: { email } });
     if (existing) {
-      // Already created (e.g. a retried request) — just return it instead
-      // of erroring, so this endpoint is safe to call more than once.
-      return res.status(200).json(existing);
+      return sendError(res, 409, 'An account with this email already exists');
     }
 
+    const password_hash = await bcrypt.hash(password, 10);
+
     const user = await prisma.users.create({
-      data: { email, name: name || email, image_url: image_url || null },
+      data: { email, name: name || email, password_hash, image_url: image_url || null },
     });
 
-    return res.status(201).json(user);
+    const token = signToken(user);
+    const { password_hash: _omit, ...safeUser } = user;
+
+    return res.status(201).json({ token, user: safeUser });
   } catch (err) {
-    console.error('Error creating profile:', err);
-    return sendError(res, 500, 'Failed to create profile');
+    console.error('Error registering user:', err);
+    return sendError(res, 500, 'Failed to register user');
   }
 }
 
-// GET /api/users/profile
-// Protected by requireAuth, which attaches the Supabase auth user (verified
-// from the JWT) to req.user. We look up the matching Prisma profile by email.
+// POST /api/users/login
+export async function login(req, res) {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return sendError(res, 400, 'Email and password are required');
+    }
+
+    const user = await prisma.users.findUnique({ where: { email } });
+    if (!user || !user.password_hash) {
+      return sendError(res, 401, 'Invalid email or password');
+    }
+
+    const passwordMatches = await bcrypt.compare(password, user.password_hash);
+    if (!passwordMatches) {
+      return sendError(res, 401, 'Invalid email or password');
+    }
+
+    const token = signToken(user);
+    const { password_hash: _omit, ...safeUser } = user;
+
+    return res.json({ token, user: safeUser });
+  } catch (err) {
+    console.error('Error logging in:', err);
+    return sendError(res, 500, 'Failed to log in');
+  }
+}
+
+// GET /api/users/profile   (protected by requireAuth)
 export async function getProfile(req, res) {
   try {
-    const user = await prisma.users.findUnique({ where: { email: req.user.email } });
+    const user = await prisma.users.findUnique({ where: { id: req.user.id } });
     if (!user) return sendError(res, 404, 'User not found');
-    return res.json(user);
+    const { password_hash, ...safeUser } = user;
+    return res.json(safeUser);
   } catch (err) {
     console.error('Error fetching profile:', err);
     return sendError(res, 500, 'Failed to fetch profile');
@@ -56,7 +92,8 @@ export async function getProfile(req, res) {
 export async function getAllUsers(req, res) {
   try {
     const users = await prisma.users.findMany();
-    return res.json(users);
+    const safeUsers = users.map(({ password_hash, ...u }) => u);
+    return res.json(safeUsers);
   } catch (err) {
     console.error('Error fetching users:', err);
     return sendError(res, 500, 'Failed to fetch users');
@@ -67,14 +104,10 @@ export async function getAllUsers(req, res) {
 export async function getUserById(req, res) {
   try {
     const { id } = req.params;
-
-    const user = await prisma.users.findUnique({
-      where: { id: Number(id) },
-    });
-
+    const user = await prisma.users.findUnique({ where: { id: Number(id) } });
     if (!user) return sendError(res, 404, 'User not found');
-
-    return res.json(user);
+    const { password_hash, ...safeUser } = user;
+    return res.json(safeUser);
   } catch (err) {
     console.error('Error fetching user:', err);
     return sendError(res, 500, 'Failed to fetch user');
@@ -85,13 +118,15 @@ export async function getUserById(req, res) {
 export async function updateUser(req, res) {
   try {
     const { id } = req.params;
+    const { password_hash, password, ...safeData } = req.body;
 
     const updated = await prisma.users.update({
       where: { id: Number(id) },
-      data: req.body,
+      data: safeData,
     });
 
-    return res.json(updated);
+    const { password_hash: _omit, ...safeUser } = updated;
+    return res.json(safeUser);
   } catch (err) {
     console.error('Error updating user:', err);
     return sendError(res, 500, 'Failed to update user');

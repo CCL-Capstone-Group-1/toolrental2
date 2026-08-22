@@ -71,12 +71,13 @@ model tools {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model users {
-  id         Int        @id @default(autoincrement())
-  name       String
-  email      String     @unique
-  image_url  String?
-  created_at DateTime?  @default(now()) @db.Timestamp(6)
-  listings   listings[]
-  loans      loans[]
-  reviews    reviews[]
+  id            Int        @id @default(autoincrement())
+  name          String
+  email         String     @unique
+  password_hash String?
+  image_url     String?
+  created_at    DateTime?  @default(now()) @db.Timestamp(6)
+  listings      listings[]
+  loans         loans[]
+  reviews       reviews[]
 }
