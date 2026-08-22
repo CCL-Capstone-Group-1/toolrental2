@@ -9,6 +9,7 @@ import { requireAuth } from '../middleware/auth.js';
 import {
   getAllListings,
   getListingById,
+  getListingBookings,
   createListing,
   updateListing,
   deleteListing
@@ -19,6 +20,10 @@ const router = Router();
 // GET /api/listings
 // Lists all tool listings
 router.get('/', getAllListings);
+
+// GET /api/listings/:id/bookings
+// Gets the date ranges a listing is already booked for
+router.get('/:id/bookings', getListingBookings);
 
 // GET /api/listings/:id
 // Gets one listing by its ID
